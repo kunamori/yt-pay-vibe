@@ -3,28 +3,43 @@ import { Readable } from 'stream';
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
+// OAuth2 client for personal Gmail accounts
+function getOAuth2Client() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Missing Google OAuth credentials in environment variables');
+  }
+
+  const oauth2Client = new google.auth.OAuth2(
+    clientId,
+    clientSecret,
+    'http://localhost:3000/api/auth/google/callback'
+  );
+
+  oauth2Client.setCredentials({
+    refresh_token: refreshToken,
+  });
+
+  return oauth2Client;
+}
+
 export async function uploadToGoogleDrive(
   fileBuffer: Buffer,
   fileName: string,
   mimeType: string
 ): Promise<{ fileId: string; fileUrl: string }> {
   try {
-    // Get credentials from environment variables
-    const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
     const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
-    if (!email || !privateKey || !folderId) {
-      throw new Error('Missing Google Drive credentials in environment variables');
+    if (!folderId) {
+      throw new Error('Missing GOOGLE_DRIVE_FOLDER_ID in environment variables');
     }
 
-    // Create JWT auth client
-    const auth = new google.auth.JWT({
-      email,
-      key: privateKey,
-      scopes: SCOPES,
-    });
-
+    // Use OAuth2 client
+    const auth = getOAuth2Client();
     const drive = google.drive({ version: 'v3', auth });
 
     // Upload file
@@ -41,12 +56,10 @@ export async function uploadToGoogleDrive(
       body: stream,
     };
 
-    // Use supportsAllDrives for Shared Drive support
     const file = await drive.files.create({
       requestBody: fileMetadata,
       media: media,
       fields: 'id, webViewLink',
-      supportsAllDrives: true,
     });
 
     const fileId = file.data.id!;
@@ -58,14 +71,12 @@ export async function uploadToGoogleDrive(
         role: 'reader',
         type: 'anyone',
       },
-      supportsAllDrives: true,
     });
 
     // Get the webViewLink
     const fileInfo = await drive.files.get({
       fileId: fileId,
       fields: 'webViewLink',
-      supportsAllDrives: true,
     });
 
     return {
