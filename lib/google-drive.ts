@@ -41,10 +41,12 @@ export async function uploadToGoogleDrive(
       body: stream,
     };
 
+    // Use supportsAllDrives for Shared Drive support
     const file = await drive.files.create({
       requestBody: fileMetadata,
       media: media,
       fields: 'id, webViewLink',
+      supportsAllDrives: true,
     });
 
     const fileId = file.data.id!;
@@ -56,12 +58,14 @@ export async function uploadToGoogleDrive(
         role: 'reader',
         type: 'anyone',
       },
+      supportsAllDrives: true,
     });
 
     // Get the webViewLink
     const fileInfo = await drive.files.get({
       fileId: fileId,
       fields: 'webViewLink',
+      supportsAllDrives: true,
     });
 
     return {
