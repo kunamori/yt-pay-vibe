@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -23,7 +24,7 @@ export default function AdminDashboard() {
   const router = useRouter()
   const { toast } = useToast()
 
-  const fetchSubmissions = async (showRefreshToast = false) => {
+  const fetchSubmissions = useCallback(async (showRefreshToast = false) => {
     try {
       if (showRefreshToast) setIsRefreshing(true)
       
@@ -58,17 +59,17 @@ export default function AdminDashboard() {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }
+  }, [router, toast])
 
   useEffect(() => {
     fetchSubmissions()
-  }, [])
+  }, [fetchSubmissions])
 
   const handleLogout = async () => {
     try {
       await fetch('/api/admin/logout', { method: 'POST' })
       router.push('/admin/login')
-    } catch (error) {
+    } catch {
       toast({
         title: "Logout Failed",
         description: "An error occurred while logging out.",
@@ -176,12 +177,12 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="mt-6 text-center">
-          <a
+          <Link
             href="/"
             className="text-sm text-gray-600 hover:text-gray-900 underline"
           >
             ← Back to Upload Page
-          </a>
+          </Link>
         </div>
       </div>
     </div>

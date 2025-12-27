@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -124,12 +125,12 @@ export default function AdminLogin() {
         </Card>
 
         <div className="mt-6 text-center">
-          <a
+          <Link
             href="/"
             className="text-sm text-slate-300 hover:text-white underline"
           >
             ← Back to Upload Page
-          </a>
+          </Link>
         </div>
       </div>
     </div>
